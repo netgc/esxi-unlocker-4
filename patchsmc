@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf-8
 
-# SPDX-FileCopyrightText: © 2011-2022 David Parsons & Sam Bingner
+# SPDX-FileCopyrightText: (c) 2011-2022 David Parsons & Sam Bingner
 # SPDX-License-Identifier: MIT
 
 """
@@ -32,7 +32,6 @@ AppleSMCHandleOSK
 """
 
 import codecs
-import mmap
 import os
 import struct
 import sys
@@ -76,14 +75,15 @@ if sys.version_info < (3, 6):
 
 
 def bytetohex(data):
-    return ''.join('{:02X} '.format(c) for c in data)
+    return ''.join('{:02X}'.format(c) for c in data)
 
 
 def printhdr(offset, hdr):
-    print(f'File Offset : 0x{offset:08x}')
-    print(f'Keys Offset : 0x{hdr[0]:08x}')
-    print(f'Private Keys: 0x{hdr[1]:04x}/{hdr[1]}')
-    print(f'Public Keys : 0x{hdr[2]:04x}/{hdr[2]}')
+    print(f'File Offset  : 0x{offset:08x}')
+    print(f'Keys Offset  : 0x{hdr[0]:08x}')
+    print(f'Private Key #: 0x{hdr[1]:04x}/{hdr[1]:04d}')
+    print(f'Public Keys #: 0x{hdr[2]:04x}/{hdr[2]:04d}')
+    print()
     return
 
 
@@ -173,7 +173,7 @@ def patchkpst(vmx, offset, data):
     # Set the data value
     setdata(vmx, offset, data)
 
-    # Get patched KPPW key and data
+    # Get patched KPST key and data
     smc_key = getkey(vmx, offset)
     smc_data = getdata(vmx, offset, smc_key)
     print(f'{key} Key After:')
@@ -210,35 +210,35 @@ def patchosk(vmx, offset, ptr, data):
 
 
 def patchsmc(name):
-    with open(name, 'rb+') as f:
-        # Memory map file
-        vmx = mmap.mmap(f.fileno(), 0)
+    with open(name, 'rb+') as vmx:
+        # Load vmx file
+        vmx_bytes = vmx.read()
 
         # Find the vSMC headers
-        smc0_header = vmx.find(SMC_HEADER_V0) - 8
-        smc1_header = vmx.find(SMC_HEADER_V1) - 8
+        smc0_header = vmx_bytes.find(SMC_HEADER_V0) - 8
+        smc1_header = vmx_bytes.find(SMC_HEADER_V1) - 8
 
         # Find '#KEY' keys
-        smc0_key = vmx.find(KEY_KEY)
-        smc1_key = vmx.rfind(KEY_KEY)
+        smc0_key = vmx_bytes.find(KEY_KEY)
+        smc1_key = vmx_bytes.rfind(KEY_KEY)
 
         # Find '+LKS' key
-        smc0_lks = vmx.find(LKS_KEY, smc0_key)
-        smc1_lks = vmx.find(LKS_KEY, smc1_key)
+        smc0_lks = vmx_bytes.find(LKS_KEY, smc0_key)
+        smc1_lks = vmx_bytes.find(LKS_KEY, smc1_key)
 
         # Find 'OSK0' keys
-        smc0_osk0 = vmx.find(OSK0_KEY, smc0_key)
-        smc1_osk0 = vmx.find(OSK0_KEY, smc1_key)
+        smc0_osk0 = vmx_bytes.find(OSK0_KEY, smc0_key)
+        smc1_osk0 = vmx_bytes.find(OSK0_KEY, smc1_key)
 
         # Find 'OSK1' keys
-        smc0_osk1 = vmx.find(OSK1_KEY, smc0_key)
-        smc1_osk1 = vmx.find(OSK1_KEY, smc1_key)
+        smc0_osk1 = vmx_bytes.find(OSK1_KEY, smc0_key)
+        smc1_osk1 = vmx_bytes.find(OSK1_KEY, smc1_key)
 
         # Find 'KPST' key
-        smc1_kpst = vmx.find(KPST_KEY, smc1_key)
+        smc1_kpst = vmx_bytes.find(KPST_KEY, smc1_key)
 
         # Find 'KPPW' key
-        smc1_kppw = vmx.find(KPPW_KEY, smc1_key)
+        smc1_kppw = vmx_bytes.find(KPPW_KEY, smc1_key)
 
         # Check to see if we have already patched the vSMC in the file
         osk0 = getdata(vmx, smc1_osk0, getkey(vmx, smc1_osk0))
@@ -293,70 +293,29 @@ def patchsmc(name):
             # Find matching RELA record in .rela.dyn in ELF files
             print(f'\nModifying ELF RELA records from 0x{smc_osk_ptr:08x} -> 0x{smc_default_ptr:08x}')
 
-            # Start at offset 0 and work thru file counting patches
-            i = 0
-            j = 0
-
             # Repack ints to bytes for find
             packed_old_ptr = struct.pack('=Q', smc_osk_ptr)
             packed_new_ptr = struct.pack('=Q', smc_default_ptr)
 
-            # Loop while lower than SMC V0 #KEY offset
-            while True:
-                i = vmx.find(packed_old_ptr, i)
-                if i != -1:
-                    print(f'Relocation modified at: 0x{i:08x}')
-                    vmx.seek(i)
-                    vmx.write(packed_new_ptr)
-                    i += 1
-                    j += 1
-                else:
-                    break
+            # Find first 4 smc_osk_ptr from RELA
+            offset = 0
+            for i in range(0, 4):
+                offset = vmx_bytes.find(packed_old_ptr, offset)
+                print(f'Relocation modified at: 0x{offset:08x}')
+                vmx.seek(offset)
+                vmx.write(packed_new_ptr)
+                offset += 1
 
-            # There should be 4 relocation records that need patching
-            if j != 4:
-                print(f'ELF file RELA error count: {j}')
         print('\n')
 
         # Tidy up
+        del vmx_bytes
         vmx.flush()
-        f.flush()
         vmx.close()
-        f.close()
-
-
-def ispatched(vmx):
-    # Find '#KEY' keys
-    smc1_key = vmx.rfind(KEY_KEY)
-
-    # Find 'OSK0' keys
-    smc1_osk0 = vmx.find(OSK0_KEY, smc1_key)
-
-    # Find 'OSK1' keys
-    smc1_osk1 = vmx.find(OSK1_KEY, smc1_key)
-
-    # Find 'KPST' key
-    smc1_kpst = vmx.find(KPST_KEY, smc1_key)
-
-    # Find 'KPPW' key
-    smc1_kppw = vmx.find(KPPW_KEY, smc1_key)
-
-    # Check to see if we have already patched the vSMC in the file
-    osk0 = getdata(vmx, smc1_osk0, getkey(vmx, smc1_osk0))
-    osk1 = getdata(vmx, smc1_osk1, getkey(vmx, smc1_osk1))
-    kppw = getdata(vmx, smc1_kppw, getkey(vmx, smc1_kppw))
-    kpst = getdata(vmx, smc1_kpst, getkey(vmx, smc1_kpst))
-
-    # print(f'{OSK0} {OSK1} {KPST} {KPPW}')
-    # print(f'{osk0} {osk1} {kpst} {kppw}')
-    if osk0 == OSK0 and osk1 == OSK1 and kppw == KPPW and kpst == KPST:
-        flag = True
-    else:
-        flag = False
-    return flag
 
 
 def dumpkeys(vmx, offset, count):
+    print(f'Table Offset : 0x{offset:08x}')
     print('Offset     Name Len Type Flag FuncPtr    Data')
     print('-------    ---- --- ---- ---- -------    ----')
 
@@ -366,30 +325,33 @@ def dumpkeys(vmx, offset, count):
         smc_data = getdata(vmx, offset, smc_key)
 
         # Dump entry
-        printkey(offset, smc_key, smc_data)
+        printkey2(offset, smc_key, smc_data)
         offset = offset + ROW_LENGTH
 
     return
 
 
 def dumpsmc(name):
-    with open(name, 'rb') as f:
+    with open(name, 'rb') as vmx:
         # Memory map file
-        vmx = mmap.mmap(f.fileno(), 0, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ)
+        vmx_bytes = vmx.read()
 
         # Find the vSMC headers
-        smc0_header = vmx.find(SMC_HEADER_V0) - 8
-        smc1_header = vmx.find(SMC_HEADER_V1) - 8
+        smc0_header = vmx_bytes.find(SMC_HEADER_V0) - 8
+        smc1_header = vmx_bytes.find(SMC_HEADER_V1) - 8
 
         # Find '#KEY' keys
-        smc0_key = vmx.find(KEY_KEY, smc0_header)
-        smc1_key = vmx.find(KEY_KEY, smc1_header)
+        smc0_key = vmx_bytes.find(KEY_KEY, smc0_header)
+        smc1_key = vmx_bytes.find(KEY_KEY, smc1_header)
+
+        # Free bytes from mem
+        del vmx_bytes
 
         # Dump first vSMC table
-        print('\nappleSMCTableV0 (smc.version = "0")')
-        hdr = gethdr(vmx, smc0_header)
-        printhdr(smc0_header, hdr)
-        dumpkeys(vmx, smc0_key, hdr[1])
+        # print('\nappleSMCTableV0 (smc.version = "0")')
+        # hdr = gethdr(vmx, smc0_header)
+        # printhdr(smc0_header, hdr)
+        # dumpkeys(vmx, smc0_key, hdr[1])
 
         # Dump second vSMC table
         print('\nappleSMCTableV1 (smc.version = "1")')
@@ -398,22 +360,51 @@ def dumpsmc(name):
         dumpkeys(vmx, smc1_key, hdr[1])
 
         # Tidy up
-        # vmx.close()
-        f.close()
+        vmx.close()
 
     return
 
 
 def checksmc(name):
-    with open(name, 'rb') as f:
+    with open(name, 'rb') as vmx:
         # Memory map file
-        vmx = mmap.mmap(f.fileno(), 0, flags=mmap.MAP_PRIVATE, prot=mmap.PROT_READ)
-        flag = ispatched(vmx)
+        vmx_bytes = vmx.read()
+
+        # Find '#KEY' keys
+        smc1_key = vmx_bytes.rfind(KEY_KEY)
+
+        # Find 'OSK0' keys
+        smc1_osk0 = vmx_bytes.find(OSK0_KEY, smc1_key)
+
+        # Find 'OSK1' keys
+        smc1_osk1 = vmx_bytes.find(OSK1_KEY, smc1_key)
+
+        # Find 'KPST' key
+        smc1_kpst = vmx_bytes.find(KPST_KEY, smc1_key)
+
+        # Find 'KPPW' key
+        smc1_kppw = vmx_bytes.find(KPPW_KEY, smc1_key)
+
+        # Free bytes from mem
+        del vmx_bytes
+
+        # Check to see if we have already patched the vSMC in the file
+        osk0 = getdata(vmx, smc1_osk0, getkey(vmx, smc1_osk0))
+        osk1 = getdata(vmx, smc1_osk1, getkey(vmx, smc1_osk1))
+        kppw = getdata(vmx, smc1_kppw, getkey(vmx, smc1_kppw))
+        kpst = getdata(vmx, smc1_kpst, getkey(vmx, smc1_kpst))
+
+        # print(f'{OSK0} {OSK1} {KPST} {KPPW}')
+        # print(f'{osk0} {osk1} {kpst} {kppw}')
+        if osk0 == OSK0 and osk1 == OSK1 and kppw == KPPW and kpst == KPST:
+            flag = True
+        else:
+            flag = False
+
         print(f'Patch Status: {flag}')
 
     # Tidy up
     vmx.close()
-    f.close()
 
     return
 
@@ -450,7 +441,7 @@ def main():
             print_usage()
         filename = sys.argv[2]
         if os.path.isfile(filename):
-            print(f'File: {filename}')
+            print(f'Filename: {filename}')
             f(filename)
         else:
             print(f'Error: Cannot find file {filename}')
@@ -462,8 +453,9 @@ def main():
 
 
 if __name__ == '__main__':
-    print('PatchSMC 4.0.2')
+    print('PatchSMC 4.0.3')
     print('==============')
-    print('© 2014-2022 David Parsons')
+    print('(c) 2014-2022 David Parsons')
+    print()
     main()
     sys.exit(0)
