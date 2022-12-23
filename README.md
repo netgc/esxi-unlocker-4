@@ -5,19 +5,21 @@ This is currently being developed and not ready for use
 Original repositories: [DrDonk](https://github.com/DrDonk)/**[esxi-unlocker](https://github.com/DrDonk/esxi-unlocker)**
 
 (c) 2011-2022 David Parsons
-
 ## Download ESXi 8.0 (integrated Unlocker and SLIC)
 
 Powered by [sysin.org](https://sysin.org/)
 
-Newly released, now tested to support **ESXi 8.0 GA**.
-
 - [VMware ESXi 8.0 SLIC 2.6 & Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-8-slic/)
 - [VMware ESXi 8.0 SLIC 2.6 & Unlocker with driver](https://sysin.org/blog/vmware-esxi-8-sysin/)
-- [VMware ESXi 7.0 U3 SLIC 2.6 & Unlocker](https://sysin.org/blog/vmware-esxi-7-u3-slic/)
-- [VMware ESXi 7.0 U2 SLIC 2.6 & Unlocker](https://sysin.org/blog/vmware-esxi-7-u2-slic/)
-- [VMware ESXi 7.0 U1 SLIC 2.5 & Unlocker](https://sysin.org/blog/vmware-esxi-7-u1-slic/)
-- [VMware ESXi 7.0 SLIC 2.5 & Unlocker](https://sysin.org/blog/vmware-esxi-7-slic/)
+
+## Download ESXi 7.0 (integrated Unlocker and SLIC)
+
+- [VMware ESXi 7.0 U3 SLIC 2.6 & Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-u3-slic/)
+- [VMware ESXi 7.0 U3 SLIC 2.6 & Unlocker with driver](https://sysin.org/blog/vmware-esxi-7-u3-nuc-usb-nvme/)
+- [VMware ESXi 7.0 U2 SLIC 2.6 & Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-u2-slic/)
+- [VMware ESXi 7.0 U2 SLIC 2.6 & Unlocker with driver](https://sysin.org/blog/vmware-esxi-7-u2-nuc-usb-nvme/)
+- [VMware ESXi 7.0 U1 SLIC 2.5 & Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-u1-slic/)
+- [VMware ESXi 7.0 SLIC 2.5 & Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-slic/)
 
 ## 1. Introduction
 
