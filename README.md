@@ -1,7 +1,5 @@
 # macOS Unlocker v4 for VMware ESXi
 
-This is currently being developed and not ready for use
-
 Original repositories: [DrDonk](https://github.com/DrDonk)/**[esxi-unlocker](https://github.com/DrDonk/esxi-unlocker)**
 
 (c) 2011-2022 David Parsons
