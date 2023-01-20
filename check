@@ -1,0 +1,53 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: © 2014-2023 David Parsons
+# SPDX-License-Identifier: MIT
+
+#set -e
+#set -x
+
+printf "VMware ESXi Unlocker 4.0.5\n"
+printf "==========================\n"
+printf "(c) 2011-2023 David Parsons\n"
+printf "\nChecking unlocker...\n"
+
+# Ensure we only use unmodified commands
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+ESXI=$(vmware -v)
+printf "Current version of ESXi: $ESXI\n"
+
+if [ ! -f "/etc/unlock.conf" ]; then
+    printf "System has not been patched\n"
+    exit 1
+fi
+
+PATCH=$(cat /etc/unlock.conf)
+printf "Patch built for ESXi: $PATCH\n"
+
+if [[ "$ESXI" != "$PATCH" ]]; then
+  printf "\x1B[41m\x1B[37m>>> ERROR: Mis-matched files please relock/unlock to update patches <<<\x1B[0m\n"
+  exit 1
+fi
+
+printf "Checking VMTAR loaded...\n"
+esxcli system visorfs tardisk list | grep apple.v00 >/dev/null
+
+if [[ $? == 0 ]]
+then
+  printf "apple.v00 loaded\n"
+else
+  printf "apple.v00 not loaded\n"
+fi
+
+printf "Checking vmx vSMC status...\n"
+grep -il \(c\)AppleComputerInc /bin/vmx*
+if [[ $? == 0 ]]
+then
+  printf "vmx patched\n"
+else
+  printf "vmx not patched\n"
+fi
+
+printf "Checking smcPresent status...\n"
+vim-cmd hostsvc/hosthardware | grep smcPresent | cut -d ',' -f 1 | sed 's/^[ \t]*//'
+exit

@@ -1,0 +1,127 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: © 2011-2023 David Parsons
+# SPDX-License-Identifier: MIT
+
+#set -e
+
+printf "VMware ESXi Unlocker 4.0.5\n"
+printf "==========================\n"
+printf "(c) 2011-2023 David Parsons\n"
+printf "\nInstalling unlocker...\n"
+
+# Ensure we only use unmodified commands
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+if [ $# -ne 0 ]; then
+  case "$1" in
+    -v)
+      printf "Verbose mode"
+      set -x
+      ;;
+    *)
+      printf "Invalid switch!"
+      exit 1
+      ;;
+  esac
+fi
+
+# Check space require 400MB to be sure can patch
+REQUIRED=400
+FREE=$(df -m . | tail -1 | awk '{print $4}')
+
+if [ "$FREE" -lt "$REQUIRED" ]; then
+    printf "\x1B[41m\x1B[37m>>> ERROR: Not enough free space to patch ESXi: free $FREE MB required $REQUIRED MB <<<\x1B[0m\n"
+    exit 1
+fi
+
+# Check for earlier v3 install
+if [ -f "/bootbank/unlocker.tgz" ]; then
+    printf "\x1B[41m\x1B[37m>>> ERROR: Version 3 of ESXi Unlocker is installed and must be uninstalled <<<\x1B[0m\n"
+    printf "Run this command:\nBootModuleConfig.sh --verbose --remove=unlocker.tgz\nAnd reboot the ESXi server\n"
+    exit 1
+fi
+
+
+# TODO: Check not in UEFI Secure Mode
+# TODO: Check on VMs are running
+# TODO: Maintenance mode
+
+
+# Absolute path to this script
+SCRIPT=$(readlink -f "$0")
+#echo "$SCRIPT"
+
+# Absolute folder to this script
+SCRIPTPATH=$(dirname "$SCRIPT")
+#echo "$SCRIPTPATH"
+
+# Change to script folder for processing
+cd "$SCRIPTPATH"
+
+# Cleanup any previous runs
+rm -rf ./tmp 2>/dev/null
+rm -f -f apple.* 2>/dev/null
+
+# Create a tmp folder for processing and copy files
+mkdir -p ./tmp/bin
+cp $1 /bin/vmx ./tmp/bin
+cp $1 /bin/vmx-debug ./tmp/bin
+cp $1 /bin/vmx-stats ./tmp/bin
+mkdir -p ./tmp/lib64
+cp $1 /lib64/libvmkctl.so ./tmp/lib64
+
+# Ensure vmx files are 4755/-rwsr-xr-x
+chmod 4755 ./tmp/bin/*
+
+# Ensure lib files are 755/-rwxr-xr-x
+chmod 755 ./tmp/lib64/*
+
+mkdir -p ./tmp/etc
+vmware -v > ./tmp/etc/unlock.conf
+
+# Do the unlocking stuff
+python ./patchsmc patch ./tmp/bin/vmx
+python ./patchsmc patch ./tmp/bin/vmx-debug
+python ./patchsmc patch ./tmp/bin/vmx-stats
+python ./patchvmkctl patch ./tmp/lib64/libvmkctl.so
+
+# Ensure vmx files are 4555/-r-sr-xr-x
+chmod 4555 ./tmp/bin/*
+
+# Ensure lib files are 555/-r-xr-xr-x
+chmod 555 ./tmp/lib64/*
+
+# Build a GZ/VMTAR file
+printf "Building apple.v00 VMTAR file...\n"
+
+#  Compress files to TAR file
+cd ./tmp
+tar c $1 -f ../apple.tar *
+cd ..
+
+# Create VMTAR from TAR file
+vmtar -c apple.tar $1 -o apple.vtar 2>/dev/null
+
+# Compress VMTAR to GZIP file
+pigz $1 -f -9 -n -T -k -S .v00 apple.vtar
+mv $1 -f apple.vtar.v00 apple.v00
+
+# Remove the working files
+printf "Cleaning up tmp files...\n"
+rm $1 -rf ./tmp
+rm $1 -f apple.tar
+rm $1 -f apple.vtar
+
+printf "Adding to bootbank...\n"
+BootModuleConfig.sh --verbose --add=apple.v00
+
+read -r -p "Reboot the ESXi server to install unlocker (y/N)? " response
+case "$response" in
+    [yY])
+        printf "Rebooting the ESXi Server\n"
+        reboot
+        ;;
+    *)
+        printf "The SMC patches will not be loaded until the ESXi server has been rebooted\n"
+        ;;
+esac
+exit 0

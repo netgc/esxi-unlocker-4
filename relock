@@ -1,0 +1,39 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: © 2011-2023 David Parsons
+# SPDX-License-Identifier: MIT
+
+#set -e
+#set -x
+
+printf "VMware ESXi Unlocker 4.0.5\n"
+printf "==========================\n"
+printf "(c) 2011-2023 David Parsons\n"
+
+# Ensure we only use unmodified commands
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+if [ $# -ne 0 ]; then
+  case "$1" in
+    -v)
+      printf "Verbose mode"
+      set -x
+      ;;
+    *)
+      printf "Invalid switch!"
+      exit 1
+      ;;
+  esac
+fi
+
+if [ -f "/bootbank/apple.v00" ]; then
+  BootModuleConfig.sh --verbose --remove=apple.v00
+fi
+
+read -r -p "Reboot the ESXi server to uninstall unlocker (y/N)? " response
+case "$response" in
+    [yY])
+        printf "Rebooting the ESXi Server\n"
+        reboot
+        ;;
+    *)
+        ;;
+esac

@@ -1,0 +1,14 @@
+backup/
+tools/
+.idea/
+samples/
+tests/
+build/
+dist/
+*.spec
+*.pyc
+*.tar
+*.tgz
+*.vmtar
+*.vgz
+*.v00
