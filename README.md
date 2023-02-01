@@ -14,9 +14,9 @@ Powered by [sysin.org](https://sysin.org/)
 ## Download ESXi 7.0 (integrated Unlocker & OEM BIOS)
 
 - [VMware ESXi 7.0 U3 & Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-u3-oem/)
-- [VMware ESXi 7.0 U3 & Unlocker with driver](https://sysin.org/blog/vmware-esxi-7-u3-nuc-usb-nvme/)
+- [VMware ESXi 7.0 U3 & Unlocker with driver](https://sysin.org/blog/vmware-esxi-7-u3-sysin/)
 - [VMware ESXi 7.0 U2 & Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-u2-oem/)
-- [VMware ESXi 7.0 U2 & Unlocker with driver](https://sysin.org/blog/vmware-esxi-7-u2-nuc-usb-nvme/)
+- [VMware ESXi 7.0 U2 & Unlocker with driver](https://sysin.org/blog/vmware-esxi-7-u2-sysin/)
 - [VMware ESXi 7.0 U1 Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-u1-oem/)
 - [VMware ESXi 7.0 Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-7-ome/)
 
