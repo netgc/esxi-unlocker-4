@@ -8,7 +8,8 @@ Original repositories: [DrDonk](https://github.com/DrDonk)/**[esxi-unlocker](htt
 
 Powered by [sysin.org](https://sysin.org/)
 
-
+- [VMware ESXi 8.0 U2 Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-8-u2-oem/)
+- [VMware ESXi 8.0 U2 Unlocker with driver](https://sysin.org/blog/vmware-esxi-8-u2-sysin/)
 - [VMware ESXi 8.0 U1 Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-8-u1-oem/)
 - [VMware ESXi 8.0 U1 Unlocker with driver](https://sysin.org/blog/vmware-esxi-8-u1-sysin/)
 - [VMware ESXi 8.0 Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-8-oem/)
