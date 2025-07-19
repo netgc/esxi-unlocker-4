@@ -4,6 +4,13 @@ Original repositories: [DrDonk](https://github.com/DrDonk)/**[esxi-unlocker](htt
 
 (c) 2011-2022 David Parsons
 
+## Download ESXi 9.0 (integrated Unlocker & OEM BIOS)
+
+Powered by [sysin.org](https://sysin.org/)
+
+- [VMware ESXi 9.0 Unlocker standard & Custom Image](https://sysin.org/blog/vmware-esxi-9-oem/)
+- [VMware ESXi 9.0 Unlocker with driver](https://sysin.org/blog/vmware-esxi-9-sysin/)
+- 
 ## Download ESXi 8.0 (integrated Unlocker & OEM BIOS)
 
 Powered by [sysin.org](https://sysin.org/)
